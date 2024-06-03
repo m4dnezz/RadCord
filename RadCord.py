@@ -42,15 +42,28 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
+
     content = message.content
+
     if content == "!movies":
-        await channel.send("Movies huh?")
+        await channel.send("Movies huh,  Alright hold on...?")
         try:
             movies = radarr.all_movies()
-            for m in movies:
-                await channel.send(m.title)
+            for i in range(0, len(movies), 20):
+                Moviebatch = movies[i:i+20]
+                MovieTitles = [movie.title + "\n" for movie in Moviebatch]
+                movie_titles_str = "".join(MovieTitles)
+                await message.channel.send(movie_titles_str)
         except Exception as e:
             print(f"Could not retrieve movies from radarr: {e}")
+
+    if content == "!ping":
+        response = os.system("ping -n 1 " + "google.com")
+        if response == 0:
+            await message.channel.send("RadCord is up and running")
+        else:
+            await message.channel.send("RadCord is dying, slowly...")
+
 
 if __name__ == "__main__":
     client.run(DISCORD_TOKEN)
