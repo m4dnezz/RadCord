@@ -1,7 +1,7 @@
 import os
 import discord
+from discord.ext import commands
 from arrapi import RadarrAPI
-from channel_ids import logg
 import sys
 
 API_KEY = os.getenv("RADARR_API")
@@ -28,42 +28,40 @@ radarr.respect_list_exclusions_when_adding()
 
 # initialize bot
 intents = discord.Intents.all()
-client = discord.Client(command_prefix="!", intents=intents)
+client = commands.Bot(command_prefix="!", intents=intents)
 
 
 @client.event
 async def on_ready():
-    global channel
-    channel = client.get_channel(logg)
-    # await channel.send("RadCord is Live!")
+    print("Bot is up and running")
 
 
 @client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+async def on_error(error):
+    print(f"client's WebSocket encountered a connection error: {error}")
 
-    content = message.content
 
-    if content == "!movies":
-        await channel.send("Movies huh,  Alright hold on...?")
-        try:
-            movies = radarr.all_movies()
-            for i in range(0, len(movies), 20):
-                Moviebatch = movies[i:i+20]
-                MovieTitles = [movie.title + "\n" for movie in Moviebatch]
-                movie_titles_str = "".join(MovieTitles)
-                await message.channel.send(movie_titles_str)
-        except Exception as e:
-            print(f"Could not retrieve movies from radarr: {e}")
+@client.command()
+async def movies(ctx):
+    await ctx.channel.send("Movies huh,  Alright hold on...?")
+    try:
+        movies = radarr.all_movies()
+        for i in range(0, len(movies), 20):
+            Moviebatch = movies[i:i+20]
+            MovieTitles = [movie.title + "\n" for movie in Moviebatch]
+            movie_titles_str = "".join(MovieTitles)
+            await ctx.channel.send(movie_titles_str)
+    except Exception as e:
+        print(f"Could not retrieve movies from radarr: {e}")
 
-    if content == "!ping":
-        response = os.system("ping -n 1 " + "google.com")
-        if response == 0:
-            await message.channel.send("RadCord is up and running")
-        else:
-            await message.channel.send("RadCord is dying, slowly...")
 
+@client.command()
+async def ping(ctx):
+    response = os.system("ping -n 1 " + "google.com")
+    if response == 0:
+        await ctx.channel.send("RadCord is up and running")
+    else:
+        await ctx.channel.send("RadCord is dying, slowly...")
 
 if __name__ == "__main__":
     client.run(DISCORD_TOKEN)
