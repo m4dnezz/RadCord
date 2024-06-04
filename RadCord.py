@@ -3,10 +3,12 @@ import discord
 from discord.ext import commands
 from arrapi import RadarrAPI
 import sys
+import logging 
 
 API_KEY = os.getenv("RADARR_API")
 RADARR_URL = os.getenv("RADARR_URL")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+handler = logging.FileHandler(filename="discord.log", encoding='utf-8', mode='w')
 
 if not API_KEY:
     raise ValueError("API key not found. Please make sure to set RADARR_API envoirment variable")
@@ -64,4 +66,4 @@ async def ping(ctx):
         await ctx.channel.send("RadCord is dying, slowly...")
 
 if __name__ == "__main__":
-    client.run(DISCORD_TOKEN)
+    client.run(DISCORD_TOKEN, log_handler=handler)
