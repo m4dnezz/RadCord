@@ -1,10 +1,11 @@
 import os
 import discord
 import feedparser
-from discord.ext import commands, tasks
-from arrapi import RadarrAPI
+import subprocess
 import sys
 import logging
+from discord.ext import commands, tasks
+from arrapi import RadarrAPI
 
 Version = "Pre-release Beta"
 python_version = sys.version
@@ -105,4 +106,15 @@ async def ping(ctx):
         await ctx.channel.send("RadCord is dying, slowly...")
 
 if __name__ == "__main__":
+    try:
+        # Run git pull command to get the latest commits
+        result = subprocess.run(['git', 'pull'], check=True, text=True, capture_output=True)
+        print("Git pull output:", result.stdout)
+        # Check if any changes were pulled
+        if "Already up to date." not in result.stdout:
+            print("Changes detected. Restarting bot...")
+            os.execv(sys.executable, ['python'] + sys.argv)  # Restart the script
+    except subprocess.CalledProcessError as e:
+        print("Error pulling from GitHub:", e.stderr)
+        
     client.run(DISCORD_TOKEN, log_handler=file_handler, root_logger=logger)
