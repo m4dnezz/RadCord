@@ -1,6 +1,7 @@
 import os
 import discord
-from discord.ext import commands
+import feedparser
+from discord.ext import commands, tasks
 from arrapi import RadarrAPI
 import sys
 import logging
@@ -14,6 +15,8 @@ print(f"RadCord version: {Version}\n")
 API_KEY = os.getenv("RADARR_API")
 RADARR_URL = os.getenv("RADARR_URL")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+
+logg_channel = 1174086999905423411
 
 logger = logging.getLogger("")
 logger.setLevel(logging.INFO)
@@ -50,6 +53,8 @@ radarr.respect_list_exclusions_when_adding()
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix="!", intents=intents)
 
+posted_entries = set()
+
 
 @client.event
 async def on_ready():
@@ -59,6 +64,22 @@ async def on_ready():
 @client.event
 async def on_error(error):
     print(f"client's WebSocket encountered a connection error: {error}")
+
+
+@tasks.loop(minutes=10)
+async def check_rss_feed():
+    feed = feedparser.parse("https://drift.sgs.se/rss")
+    channel = client.get_channel(logg_channel)
+
+    for entry in feed.entries:
+        entry_id = entry.link
+
+        if entry_id not in posted_entries:
+            message = f"**{entry.title}**\n{entry.link}\n\n{entry.summary}"
+            await channel.send(message)
+            posted_entries.add(entry_id)
+    if len(posted_entries) > 100:
+        posted_entries.clear()
 
 
 @client.command()
