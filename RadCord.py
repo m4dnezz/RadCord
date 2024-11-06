@@ -44,7 +44,6 @@ if not DISCORD_TOKEN:
 if not sys.version.startswith("3.11.9") and sys.platform == 'win32':
     print("This bot was made for python 3.11.9, and win32")
     print("Compatability for other versions and platforms are not guaranteed")
-    input("Press anything to continue...")
 
 # Make use of the very nice API wrapper by @meisnate12
 radarr = RadarrAPI(RADARR_URL, API_KEY)
@@ -116,5 +115,5 @@ if __name__ == "__main__":
             os.execv(sys.executable, ['python'] + sys.argv)  # Restart the script
     except subprocess.CalledProcessError as e:
         print("Error pulling from GitHub:", e.stderr)
-        
+
     client.run(DISCORD_TOKEN, log_handler=file_handler, root_logger=logger)
