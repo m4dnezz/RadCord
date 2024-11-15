@@ -6,6 +6,7 @@ import sys
 import logging
 from discord.ext import commands, tasks
 from arrapi import RadarrAPI
+from bs4 import BeautifulSoup
 
 Version = "Pre-release Beta"
 python_version = sys.version
@@ -80,6 +81,40 @@ async def check_rss_feed():
             posted_entries.add(entry_id)
     if len(posted_entries) > 100:
         posted_entries.clear()
+
+
+@client.command()
+async def rss(ctx):
+    # Parse the RSS feed
+    feed = feedparser.parse("https://drift.sgs.se/rss")
+
+    # Ensure there is at least one entry in the feed to avoid IndexError
+    if feed.entries:
+        # Extract the title and publication date
+        title = feed.entries[0].title
+        published = feed.entries[0].published
+
+        # Extract and clean the description using BeautifulSoup
+        raw_description = feed.entries[0].description
+        soup = BeautifulSoup(raw_description, "html.parser")
+        
+        # Add newlines after <br> and <p> tags for better formatting
+        for br in soup.find_all("br"):
+            br.replace_with("\n")
+        for p in soup.find_all("p"):
+            p.insert_before("\n")
+        
+        clean_description = soup.get_text()  # Remove HTML tags and keep formatting
+
+        # Send the formatted message to the channel
+        await ctx.channel.send(
+            f"Latest RSS information from SGS:\n"
+            f"**Title**: {title}\n"
+            f"**Date**: {published}\n"
+            f"**Description**: {clean_description.strip()}"
+        )
+    else:
+        await ctx.channel.send("No RSS entries found.")
 
 
 @client.command()
